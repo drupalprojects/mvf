@@ -128,10 +128,47 @@ function mvf_field_info() {
         ),
         'default_widget' => 'mvf_widget_default',
         'default_formatter' => 'mvf_formatter_default',
+        'property_type' => 'mvf_' . $value_field_type . '_' . $unit_field_type,
+        'property_callbacks' => array('mvf_property_info_callback'),
       );
     }
   }
   return $field_info;
+}
+
+/**
+ * Callback to alter the property info of mvf field.
+ *
+ * @see mvf_field_info().
+ */
+function mvf_property_info_callback(&$info, $entity_type, $field, $instance, $field_type) {
+  $name = $field['field_name'];
+  $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$name];
+
+  $property['getter callback'] = 'entity_metadata_field_verbatim_get';
+  $property['setter callback'] = 'entity_metadata_field_verbatim_set';
+  $property['property info'] = mvf_data_property_info();
+
+  unset($property['query callback']);
+}
+
+/**
+ * Defines info for the properties of the Mvf field data structure.
+ */
+function mvf_data_property_info() {
+  return array(
+    'value' => array(
+      'type' => 'decimal',
+      'label' => t('Value'),
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+    'unit' => array(
+      'type' => 'units_unit',
+      'label' => t('Unit'),
+      'schema field' => 'target_id',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+  );
 }
 
 /**

@@ -145,6 +145,11 @@ function mvf_property_info_callback(&$info, $entity_type, $field, $instance, $fi
   $name = $field['field_name'];
   $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$name];
 
+  // We will expand the structure with additional properties for extracting
+  // converted value. Since the possible targets of unit conversions depend on
+  // conditions of a specific MVF field, we will populate that data through
+  // 'property info alter' on-the-fly.
+  $property['property info alter'] = 'mvf_property_info_alter';
   $property['getter callback'] = 'entity_metadata_field_verbatim_get';
   $property['setter callback'] = 'entity_metadata_field_verbatim_set';
   $property['property info'] = mvf_data_property_info();
@@ -160,12 +165,13 @@ function mvf_data_property_info() {
     'value' => array(
       'type' => 'decimal',
       'label' => t('Value'),
+      'schema field' => mvf_subfield_to_column('value'),
       'setter callback' => 'entity_property_verbatim_set',
     ),
     'unit' => array(
       'type' => 'units_unit',
       'label' => t('Unit'),
-      'schema field' => 'target_id',
+      'schema field' => mvf_subfield_to_column('unit'),
       'setter callback' => 'entity_property_verbatim_set',
     ),
   );
@@ -1892,4 +1898,48 @@ function mvf_views_api() {
  */
 function mvf_field_types() {
   return array_keys(mvf_field_info());
+}
+
+/**
+ * Property info alter callback for MVF field structure.
+ *
+ * We will examine what MVF it is, what units are available for that MVF and for
+ * each of those units will generate additional property of converted value.
+ */
+function mvf_property_info_alter(EntityMetadataWrapper $wrapper, array $propertyInfo) {
+  $mvf_info = $wrapper->info();
+  $mvf_field = field_info_field($mvf_info['name']);
+  $measure = mvf_measure_extract($mvf_field);
+  foreach (units_unit_by_measure_load_multiple($measure) as $unit) {
+    $key = 'converted_' . entity_id($unit->entityType(), $unit);
+    $propertyInfo['properties'][$key] = $propertyInfo['properties']['value'];
+    unset($propertyInfo['properties'][$key]['schema field']);
+    unset($propertyInfo['properties'][$key]['setter callback']);
+    $propertyInfo['properties'][$key]['getter callback'] = 'mvf_entity_property_converted_get';
+    $propertyInfo['properties'][$key]['computed'] = TRUE;
+    $propertyInfo['properties'][$key]['label'] = t('Value in @label', array(
+      '@label' => entity_label($unit->entityType(), $unit),
+    ));
+    $ids = entity_extract_ids($unit->entityType(), $unit);
+    // We store in the property info the conversion target unit, so the getter
+    // callback can easily access it.
+    $propertyInfo['properties'][$key]['mvf target unit'] = $ids[0];
+
+  }
+  return $propertyInfo;
+}
+
+/**
+ * Property getter callback for MVF converted values.
+ *
+ * Return MVF value converted into requested unit.
+ */
+function mvf_entity_property_converted_get($data, array $options, $name, $type, $info) {
+  $units = array($data[mvf_subfield_to_column('unit')], $info['mvf target unit']);
+  $units = units_unit_load_multiple($units);
+  $from = $units[$data[mvf_subfield_to_column('unit')]];
+  $from = entity_id($from->entityType(), $from);
+  $to = $units[$info['mvf target unit']];
+  $to = entity_id($to->entityType(), $to);
+  return units_convert($data[mvf_subfield_to_column('value')], $from, $to);
 }

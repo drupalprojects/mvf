@@ -463,6 +463,18 @@ function mvf_field_presave($entity_type, $entity, $field, $instance, $langcode, 
  * Implements hook_field_insert().
  */
 function mvf_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  // First of all clean the items if they contain a default value with only
+  // unit data defined. It could have gotten up to here because if empty data
+  // is saved, Field module would try to put there "default value". And this
+  // "default value" might only contain the unit and not the value.
+  foreach ($items as $delta => $item) {
+    unset($item['default_value_widget']);
+    $items[$delta] = $item;
+    if (mvf_field_is_empty($item, $field)) {
+      unset($items[$delta]);
+    }
+  }
+  $items = array_values($items);
   foreach ($field['settings']['meta_info'] as $subfield => $meta_info) {
     $mocked_field = mvf_field_mockup($field, $subfield);
     $mocked_instance = mvf_instance_mockup($field, $instance, $subfield);
@@ -1029,7 +1041,6 @@ function mvf_field_is_empty($item, $field) {
       $is_empty = $is_empty || (bool) module_invoke($mocked_field['module'], 'field_is_empty', $item, $mocked_field);
     }
   }
-
 
   return $is_empty;
 }

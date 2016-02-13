@@ -100,14 +100,11 @@ function mvf_unit_suggester_per_user_disabled($measure, $field, $instance, $view
   $field_info = $field_map[$field['field_name']];
   foreach ($field_info['bundles'] as $entity_type => $bundles) {
     foreach ($bundles as $bundle) {
-      $instance = field_info_instance($entity_type, $field['field_name'], $bundle);
-      foreach ($instance['display'] as $instance_display) {
-        $instance_settings = mvf_unit_suggesters_settings_extract($instance_display, mvf_get_unit_suggester('per_user'));
-        if ($instance_settings['enable']) {
-          // At least for one display per user output is still enabled, so we
-          // should not delete the corresponding unit field.
-          return;
-        }
+      $instance_settings = mvf_unit_suggesters_settings_extract(field_info_instance($entity_type, $field['field_name'], $bundle), mvf_get_unit_suggester('per_user'));
+      if ($instance_settings['enable']) {
+        // At least for one display per user output is still enabled, so we
+        // should not delete the corresponding unit field.
+        return;
       }
     }
   }

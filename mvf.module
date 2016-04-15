@@ -925,7 +925,7 @@ function mvf_field_formatter_view($entity_type, $entity, $field, $instance, $lan
         // We were requested to render the unit as symbol, so we do not delegate
         // rendering of unit to the sub formatter, we do it ourselves.
         $extra = array(
-          '#markup' => $item['entity']->symbol ? $item['entity']->symbol : entity_label('units_unit', $item['entity']),
+          '#markup' => $item['entity']->symbol ? filter_xss_admin($item['entity']->symbol) : entity_label('units_unit', $item['entity']),
         );
       }
       else {

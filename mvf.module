@@ -216,8 +216,7 @@ function mvf_field_formatter_info() {
     'unit' => array(),
     'value' => array(),
     'mvf' => array(
-      'formatter_unit' => array(),
-      'formatter_unit_settings' => array(),
+      'unit_suggesters_settings' => array(),
     ),
   );
   return array(

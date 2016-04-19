@@ -59,9 +59,9 @@ function mvf_update_7102() {
           $instance = field_info_instance($entity_type, $field_name, $bundle);
 
           $map = array(
-            'MVFUnitSuggeserHardCoded' => 'hardcoded',
+            'MVFUnitSuggesterHardCoded' => 'hardcoded',
             'MVFUnitSuggesterLocale' => 'locale',
-            'MVFUnitSuggeserOriginal' => 'original',
+            'MVFUnitSuggesterOriginal' => 'original',
             'MVFPerUserUnitSuggesterUser' => 'per_user',
           );
 

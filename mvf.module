@@ -537,6 +537,7 @@ function mvf_field_instance_settings_form($field, $instance) {
           $extra['#mvf'] = array(
             'field' => $field,
           );
+          $extra['#pre_render'][] = 'mvf_entityreference_field_instance_settings_pre_render';
           break;
 
         case 'value':
@@ -603,6 +604,19 @@ function mvf_entityreference_field_instance_settings_validate($form, &$form_stat
   $field = $form['#mvf']['field'];
   $instance = $form_state['entityreference']['instance'];
   $form_state['entityreference']['instance'] = mvf_instance_mockup($field, $instance, 'unit');
+}
+
+/**
+ * Form element process function.
+ *
+ * Hide entity reference instance settings form element if it is empty.
+ */
+function mvf_entityreference_field_instance_settings_pre_render($element) {
+  if (count(element_children($element)) == 1 && isset($element['settings']) && count(element_children($element['settings'])) == 0) {
+    // That's an empty construction produced by entityreference module.
+    $element['#printed'] = TRUE;
+  }
+  return $element;
 }
 
 /**

@@ -1767,7 +1767,14 @@ function _mvf_unit_suggesters_info_sort($a, $b) {
  *   Fully loaded 'units_measure' entity that is used in the provided MVF field
  */
 function mvf_measure_extract($field) {
-  return units_measure_machine_name_load(reset($field['settings']['unit']['handler_settings']['target_bundles']));
+  $mocked_field = mvf_field_mockup($field, 'unit');
+  $options = entityreference_get_selection_handler($mocked_field)->getReferencableEntities(NULL, 'CONTAINS', 1);
+  if (!empty($options)) {
+    $bundles = array_keys($options);
+    return units_measure_machine_name_load(reset($bundles));
+  }
+
+  return NULL;
 }
 
 /**
